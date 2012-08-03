@@ -25,7 +25,7 @@ module("Ember.Filterable with content", {
   }
 });
 
-test("if you do not specify `filterProperty` filterable has no effect", function() {
+test("if you do not specify `filterProperties` filterable has no effect", function() {
   equal(filteredArrayController.get('length'), 3, 'array has 3 items');
 
   unfilteredArray.pushObject({id: 4, name: 'Scumbag Chavard'});
@@ -33,28 +33,29 @@ test("if you do not specify `filterProperty` filterable has no effect", function
   equal(filteredArrayController.get('length'), 4, 'array has 4 items');
 });
 
-test("you can change the filterProperty and filterValue", function() {
-  equal(filteredArrayController.get('length'), 3, 'precond - array has 3 items');
+test("you can change the filterProperties and filterCondition", function() {
+  equal(1,2);
+  // equal(filteredArrayController.get('length'), 3, 'precond - array has 3 items');
 
-  filteredArrayController.setProperties({filterProperty: 'id', filterValue: 1});
+  // filteredArrayController.setProperties({filterProperty: 'id', filterValue: 1});
 
-  equal(filteredArrayController.get('length'), 1, 'array has 1 item');
-  equal(filteredArrayController.objectAt(0).name, 'Scumbag Dale', 'array is filtered by id');
+  // equal(filteredArrayController.get('length'), 1, 'array has 1 item');
+  // equal(filteredArrayController.objectAt(0).name, 'Scumbag Dale', 'array is filtered by id');
 
-  filteredArrayController.set('filterValue', 2);
+  // filteredArrayController.set('filterValue', 2);
 
-  equal(filteredArrayController.get('length'), 1, 'array has 1 item');
-  equal(filteredArrayController.objectAt(0).name, 'Scumbag Katz', 'array is filtered by id');
+  // equal(filteredArrayController.get('length'), 1, 'array has 1 item');
+  // equal(filteredArrayController.objectAt(0).name, 'Scumbag Katz', 'array is filtered by id');
 
-  filteredArrayController.set('filterProperty', 'name');
-  filteredArrayController.set('filterValue', 'Scumbag Bryn');
+  // filteredArrayController.set('filterProperty', 'name');
+  // filteredArrayController.set('filterValue', 'Scumbag Bryn');
 
-  equal(filteredArrayController.get('length'), 1, 'array has 1 item');
-  equal(filteredArrayController.objectAt(0).name, 'Scumbag Bryn', 'array is filtered by name');
+  // equal(filteredArrayController.get('length'), 1, 'array has 1 item');
+  // equal(filteredArrayController.objectAt(0).name, 'Scumbag Bryn', 'array is filtered by name');
 });
 
 
-module("Ember.Filterable with content, filterProperty and filterValue", {
+module("Ember.Filterable with content, filterProperties and filterCondition", {
   setup: function() {
     Ember.run(function() {
       array = [{ id: 1, name: "Scumbag Dale" }, { id: 2, name: "Scumbag Katz" }, { id: 3, name: "Scumbag Bryn" }];
@@ -62,15 +63,14 @@ module("Ember.Filterable with content, filterProperty and filterValue", {
 
       filteredArrayController = Ember.ArrayProxy.create(Ember.FilterableMixin, {
         content: unfilteredArray,
-        filterProperty: 'id',
-        filterValue: 1
+        filterProperties: ['id'],
+        filterCondition: function(item){ return get(item, 'id') === 1; }
       });
     });
   },
 
   teardown: function() {
     Ember.run(function() {
-      filteredArrayController.set('content', null);
       filteredArrayController.destroy();
     });
   }
@@ -95,7 +95,7 @@ test("you can add objects in the filtered array", function() {
   equal(filteredArrayController.objectAt(2).name, 'Scumbag Fucs', 'a new object added to controller was inserted according to given constraint');
 });
 
-test("new objects don't get added if they don't match the filter", function() {
+test("new objects don't get added if they don't meet the filter condition", function() {
   equal(filteredArrayController.get('length'), 1, 'array has 1 item');
 
   unfilteredArray.pushObject({id: 5, name: 'Scumbag Chavard'});
@@ -123,33 +123,6 @@ test("you can change a filter property and the content will be added", function(
   equal(filteredArrayController.objectAt(1).name, 'Scumbag Katz', 'katz is there');
 });
 
-module("Ember.Filterable with content and filterProperty", {
-  setup: function() {
-    Ember.run(function() {
-      array = [{ name: "Scumbag Dale", display: false}, { name: "Scumbag Katz", display: true}];
-      unfilteredArray = Ember.A(array);
-
-      filteredArrayController = Ember.ArrayProxy.create(Ember.FilterableMixin, {
-        content: unfilteredArray,
-        filterProperty: 'display'
-      });
-    });
-  },
-
-  teardown: function() {
-    Ember.run(function() {
-      filteredArrayController.set('content', null);
-      filteredArrayController.destroy();
-    });
-  }
-});
-
-test("by default filters properties which are true", function(){
-  equal(filteredArrayController.get('length'), 1, 'array has 1 item');
-  equal(filteredArrayController.objectAt(0).name, 'Scumbag Katz', 'katz is the only one');
-
-});
-
 module("Ember.Filterable with filterProperty and filterValue", {
   setup: function() {
     Ember.run(function() {
@@ -157,15 +130,16 @@ module("Ember.Filterable with filterProperty and filterValue", {
       unfilteredArray = Ember.A(array);
 
       filteredArrayController = Ember.ArrayProxy.create(Ember.FilterableMixin, {
-        filterProperty: 'id',
-        filterValue: 1
+        filterProperties: ['id'],
+        filterCondition: function(item){
+          return get(item,'id') === 1;
+        }
       });
     });
   },
 
   teardown: function() {
     Ember.run(function() {
-      filteredArrayController.set('content', null);
       filteredArrayController.destroy();
     });
   }
@@ -180,4 +154,8 @@ test("you can set content later and it will be filtered", function() {
 
   equal(filteredArrayController.get('length'), 1, 'array has 1 item');
   equal(filteredArrayController.objectAt(0).name, 'Scumbag Dale', 'dale is in the filtered array');
+});
+
+test("by default it tests if all filterProperties are true", function() {
+  equal(1,2);
 });

@@ -7,8 +7,7 @@ var get = Ember.get, set = Ember.set, forEach = Ember.EnumerableUtils.forEach;
  @extends Ember.MutableEnumerable
 */
 Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
-  filterProperty: null,
-  filterValue: true,
+  filterProperties: null,
 
   addObject: function(obj) {
     var content = get(this, 'content');
@@ -22,36 +21,38 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
 
   destroy: function() {
     var content = get(this, 'content'),
-        filterProperty = get(this, 'filterProperty');
+        filterProperties = get(this, 'filterProperties');
 
-    if (content && filterProperty) {
+    if (content && filterProperties) {
       forEach(content, function(item) {
-        Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChangePropertyDidChange');
+        forEach(filterProperties, function(filterProperty) {
+          Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        }, this);
       }, this);
     }
 
     return this._super();
   },
 
-  isFiltered: Ember.computed('filterProperty', function() {
-    return !!get(this, 'filterProperty');
+  isFiltered: Ember.computed('filterProperties', function() {
+    return !!get(this, 'filterProperties');
   }),
 
-  arrangedContent: Ember.computed('content', 'filterProperty', 'filterValue', function(key, value) {
+  arrangedContent: Ember.computed('content', 'filterProperties.@each', function(key, value) {
     var content = get(this, 'content'),
         isFiltered = get(this, 'isFiltered'),
-        filterProperty = get(this, 'filterProperty'),
+        filterProperties = get(this, 'filterProperties'),
         filterValue = get(this, 'filterValue'),
         self = this;
 
     if (content && isFiltered) {
       forEach(content, function(item) {
-        Ember.addObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        forEach(filterProperties, function(filterProperty) {
+          Ember.addObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        }, this);
       }, this);
       content = content.slice();
-      content = content.filter(function(item){
-        return get(item, filterProperty) === filterValue;
-      });
+      content = content.filter(this.filterCondition, this);
 
       return Ember.A(content);
     }
@@ -61,11 +62,13 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
 
   _contentWillChange: Ember.beforeObserver(function() {
     var content = get(this, 'content'),
-        filterProperty = get(this, 'filterProperty');
+        filterProperties = get(this, 'filterProperties');
 
-    if (content && filterProperty) {
+    if (content && filterProperties) {
       forEach(content, function(item) {
-        Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        forEach(filterProperties, function(filterProperty) {
+          Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        }, this);
       }, this);
     }
 
@@ -78,12 +81,13 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
     if (isFiltered) {
       var arrangedContent = get(this, 'arrangedContent');
       var removedObjects = array.slice(idx, idx+removedCount);
-      var filterProperty = get(this, 'filterProperty');
+      var filterProperties = get(this, 'filterProperties');
 
       forEach(removedObjects, function(item) {
         arrangedContent.removeObject(item);
-
-        Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        forEach(filterProperties, function(filterProperty) {
+          Ember.removeObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        }, this);
       });
     }
 
@@ -92,7 +96,7 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
 
   contentArrayDidChange: function(array, idx, removedCount, addedCount) {
     var isFiltered = get(this, 'isFiltered'),
-        filterProperty = get(this, 'filterProperty');
+        filterProperties = get(this, 'filterProperties');
 
     if (isFiltered) {
       var addedObjects = array.slice(idx, idx+addedCount);
@@ -101,7 +105,9 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
       forEach(addedObjects, function(item) {
         this.insertItemFiltered(item);
 
-        Ember.addObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        forEach(filterProperties, function(filterProperty) {
+          Ember.addObserver(item, filterProperty, this, 'contentItemFilterPropertyDidChange');
+        }, this);
       }, this);
     }
 
@@ -121,7 +127,7 @@ Ember.FilterableMixin = Ember.Mixin.create(Ember.MutableEnumerable, {
         filterProperty = get(this, 'filterProperty'),
         filterValue = get(this, 'filterValue');
 
-    if( get(item,filterProperty) === filterValue){
+    if( this.filterCondition(item) ){
       arrangedContent.pushObject(item);
     }
   }
