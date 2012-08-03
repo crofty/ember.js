@@ -634,6 +634,23 @@ testBoth('setting a cached computed property whose value has changed should trig
   equal(get(obj, 'foo'), 'bar');
 });
 
+
+module("Ember.beforeObserver");
+
+testBoth("provides previous value to beforeObserver", function(get, set) {
+  var obj = { foo: 'bar' };
+  var previous;
+
+  Ember.addBeforeObserver(obj, 'foo', function(hash) { previous = hash.oldValue; });
+
+  set(obj, 'foo', 'baz');
+  equal(previous, 'bar', 'should have previous value');
+
+  set(obj, 'foo', 'bar');
+  equal(previous, 'baz', 'should have new previous value');
+});
+
+
 module("Ember.immediateObserver");
 
 testBoth("immediate observers should fire synchronously", function(get, set) {
