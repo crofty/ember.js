@@ -146,11 +146,13 @@ Ember.EventDispatcher = Ember.Object.extend(
     rootElement.delegate('[data-ember-action]', event + '.ember', function(evt) {
       return Ember.handleErrors(function() {
         var actionId = Ember.$(evt.currentTarget).attr('data-ember-action'),
-            action   = Ember.Handlebars.ActionHelper.registeredActions[actionId],
-            handler  = action.handler;
+            action   = Ember.Handlebars.ActionHelper.registeredActions[actionId];
+        if (action){
+          var handler  = action.handler;
 
-        if (action.eventName === eventName) {
-          return handler(evt);
+          if (action.eventName === eventName) {
+            return handler(evt);
+          }
         }
       }, this);
     });
